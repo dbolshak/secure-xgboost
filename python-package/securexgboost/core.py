@@ -1851,7 +1851,7 @@ class Booster(object):
 
             out_sig = ctypes.POINTER(ctypes.c_uint8)()
             out_sig_length = c_bst_ulong()
-            sym_key = _get_current_user_sym_key()
+            c_char_p_key = _get_current_user_sym_key()
 
             channel_addr = _CONF["remote_addr"]
             if channel_addr:
@@ -1860,7 +1860,7 @@ class Booster(object):
                     save_model_params = remote_pb2.SaveModelParams(
                         booster_handle=self.handle.value,
                         filename=fname,
-                        sym_key=sym_key)
+                        sym_key=c_char_p_key.value)
                     seq_num = get_seq_num_proto() 
                     response = _check_remote_call(stub.rpc_XGBoosterSaveModel(remote_pb2.SaveModelParamsRequest(params=save_model_params, seq_num=seq_num, username=_CONF["current_user"],
                                                                                                                 signature=sig, sig_len=sig_len)))
@@ -1876,7 +1876,7 @@ class Booster(object):
                                                     nonce, nonce_size, ctypes.c_uint32(nonce_ctr),
                                                     ctypes.byref(out_sig),
                                                     ctypes.byref(out_sig_length),
-                                                    signers, c_signatures, c_sig_lengths, sym_key))
+                                                    signers, c_signatures, c_sig_lengths, c_char_p_key))
             verify_enclave_signature("", 0, out_sig, out_sig_length)
         else:
             raise TypeError("fname must be a string")
@@ -1968,12 +1968,14 @@ class Booster(object):
             out_sig_length = c_bst_ulong()
 
             channel_addr = _CONF["remote_addr"]
+            c_char_p_key = _get_current_user_sym_key()
             if channel_addr:
                 with grpc.insecure_channel(channel_addr) as channel:
                     stub = remote_pb2_grpc.RemoteStub(channel)
                     load_model_params = remote_pb2.LoadModelParams(
                         booster_handle=self.handle.value,
-                        filename=fname)
+                        filename=fname,
+                        sym_key=c_char_p_key.value)
                     seq_num = get_seq_num_proto() 
                     response = _check_remote_call(stub.rpc_XGBoosterLoadModel(remote_pb2.LoadModelParamsRequest(params=load_model_params,
                                                                                                                 seq_num=seq_num,
@@ -1988,7 +1990,7 @@ class Booster(object):
                 nonce = _CONF["nonce"]
                 nonce_size = _CONF["nonce_size"]
                 nonce_ctr = ctypes.c_uint32(_CONF["nonce_ctr"])
-                _check_call(_LIB.XGBoosterLoadModel(self.handle, c_str(fname), nonce, nonce_size, nonce_ctr, ctypes.byref(out_sig), ctypes.byref(out_sig_length), signers, c_signatures, c_lengths))
+                _check_call(_LIB.XGBoosterLoadModel(self.handle, c_str(fname), nonce, nonce_size, nonce_ctr, ctypes.byref(out_sig), ctypes.byref(out_sig_length), signers, c_signatures, c_lengths, c_char_p_key))
 
             verify_enclave_signature("", 0, out_sig, out_sig_length)
         else:
