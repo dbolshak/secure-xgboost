@@ -275,6 +275,7 @@ message PredictParamsRequest {
 message SaveModelParams {
     string booster_handle = 1;
     string filename = 2;
+    string sym_key = 3;
 }
 
 // Wrapper around SaveModelParams to include sequence number
@@ -295,6 +296,7 @@ message SaveModelParamsRequest {
 message LoadModelParams {
     string booster_handle = 1;
     string filename = 2;
+    string sym_key = 3;
 }
 
 // Wrapper around LoadModelParams to include sequence number

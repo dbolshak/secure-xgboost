@@ -1859,10 +1859,11 @@ class Booster(object):
                     stub = remote_pb2_grpc.RemoteStub(channel)
                     save_model_params = remote_pb2.SaveModelParams(
                         booster_handle=self.handle.value,
-                        filename=fname)
+                        filename=fname,
+                        sym_key=sym_key)
                     seq_num = get_seq_num_proto() 
                     response = _check_remote_call(stub.rpc_XGBoosterSaveModel(remote_pb2.SaveModelParamsRequest(params=save_model_params, seq_num=seq_num, username=_CONF["current_user"],
-                                                                                                                signature=sig, sig_len=sig_len, sym_key=sym_key)))
+                                                                                                                signature=sig, sig_len=sig_len)))
                     out_sig = proto_to_pointer(response.signature)
                     out_sig_length = c_bst_ulong(response.sig_len)
             else:
