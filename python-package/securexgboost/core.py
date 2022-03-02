@@ -1793,13 +1793,8 @@ class Booster(object):
         preds : numpy array 
             plaintext predictions
         """
-        try:
-            sym_key = _CONF["current_user_sym_key"]
-        except:
-            raise ValueError("User not found. Please set your username, symmetric key, and public key using `init_user()`")
 
-        # Cast arguments to proper ctypes
-        c_char_p_key = ctypes.c_char_p(sym_key)
+        c_char_p_key = _get_current_user_sym_key()
 
         if not isinstance(encrypted_preds, list):
             size_t_num_preds = ctypes.c_size_t(num_preds)
@@ -2756,15 +2751,23 @@ def _get_enclave_symm_key():
 
 
     # Decrypt the key and save it
-    try:
-        sym_key = _CONF["current_user_sym_key"]
-    except:
-        raise ValueError("User not found. Please set your username, symmetric key, and public key using `init_user()`")
-    c_char_p_key = ctypes.c_char_p(sym_key)
+    c_char_p_key = _get_current_user_sym_key()
     enclave_symm_key = ctypes.POINTER(ctypes.c_uint8)()
 
     _check_call(_LIB.decrypt_enclave_key(c_char_p_key, enc_key, enc_key_size, ctypes.byref(enclave_symm_key)))
     _CONF["enclave_sym_key"] = enclave_symm_key
+
+
+def _get_current_user_sym_key():
+    """
+    Get user's symmetric key in C style used to encrypt/decrypt data specific to current user
+    """
+
+    try:
+        sym_key = _CONF["current_user_sym_key"]
+        return ctypes.c_char_p(sym_key)
+    except:
+        raise ValueError("User not found. Please set your username, symmetric key, and public key using `init_client()`")
 
 
 ##########################################
