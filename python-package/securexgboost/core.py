@@ -1851,6 +1851,7 @@ class Booster(object):
 
             out_sig = ctypes.POINTER(ctypes.c_uint8)()
             out_sig_length = c_bst_ulong()
+            sym_key = _get_current_user_sym_key()
 
             channel_addr = _CONF["remote_addr"]
             if channel_addr:
@@ -1861,7 +1862,7 @@ class Booster(object):
                         filename=fname)
                     seq_num = get_seq_num_proto() 
                     response = _check_remote_call(stub.rpc_XGBoosterSaveModel(remote_pb2.SaveModelParamsRequest(params=save_model_params, seq_num=seq_num, username=_CONF["current_user"],
-                                                                                                                signature=sig, sig_len=sig_len)))
+                                                                                                                signature=sig, sig_len=sig_len, sym_key=sym_key)))
                     out_sig = proto_to_pointer(response.signature)
                     out_sig_length = c_bst_ulong(response.sig_len)
             else:
@@ -1874,7 +1875,7 @@ class Booster(object):
                                                     nonce, nonce_size, ctypes.c_uint32(nonce_ctr),
                                                     ctypes.byref(out_sig),
                                                     ctypes.byref(out_sig_length),
-                                                    signers, c_signatures, c_sig_lengths))
+                                                    signers, c_signatures, c_sig_lengths, sym_key))
             verify_enclave_signature("", 0, out_sig, out_sig_length)
         else:
             raise TypeError("fname must be a string")
