@@ -1391,7 +1391,7 @@ class Booster(object):
         if "current_user" in _CONF:
             user = _CONF["current_user"]
         else:
-            raise ValueError("Please set your user with init_user() function")
+            raise ValueError("Please set your user with init_client() function")
 
         for key, val in params:
             args = "XGBoosterSetParam " + self.handle.value.decode('utf-8') + " " + key + "," + str(val)
@@ -1654,7 +1654,7 @@ class Booster(object):
         if "current_user" in _CONF:
             username = _CONF["current_user"]
         else:
-            raise ValueError("Please set your username with the init_user() function")
+            raise ValueError("Please set your username with the init_client() function")
         option_mask = 0x00
         if output_margin:
             option_mask |= 0x01
@@ -1840,7 +1840,7 @@ class Booster(object):
         if "current_user" in _CONF:
             username = _CONF["current_user"]
         else:
-            raise ValueError("Please set your username with the init_user() function")
+            raise ValueError("Please set your username with the init_client() function")
         if isinstance(fname, STRING_TYPES):  # assume file name
 
             # Normalize file paths (otherwise signatures might differ)
@@ -1894,7 +1894,7 @@ class Booster(object):
         if "current_user" in _CONF:
             username = _CONF["current_user"]
         else:
-            raise ValueError("Please set your username with the init_user() function")
+            raise ValueError("Please set your username with the init_client() function")
         length = c_bst_ulong()
         cptr = ctypes.POINTER(ctypes.c_char)()
 
@@ -1952,7 +1952,7 @@ class Booster(object):
         if "current_user" in _CONF:
             username = _CONF["current_user"]
         else:
-            raise ValueError("Please set your username with the init_user() function")
+            raise ValueError("Please set your username with the init_client() function")
         if isinstance(fname, STRING_TYPES):
 
             # Normalize file paths (otherwise signatures might differ)
@@ -2188,7 +2188,7 @@ class Booster(object):
         try:
             sym_key = _CONF["enclave_sym_key"]
         except:
-            raise ValueError("Please set your username with the init_user() function")
+            raise ValueError("Please set your username with the init_client() function")
         _check_call(_LIB.decrypt_dump(sym_key, sarr, length))
 
 
@@ -2694,7 +2694,7 @@ def _add_client_key():
         priv_key = _CONF["current_user_priv_key"]
         cert = _CONF["current_user_cert"]
     except:
-        raise ValueError("Please set your username with the init_user() function")
+        raise ValueError("Please set your username with the init_client() function")
     enc_sym_key, enc_sym_key_size = encrypt_data_with_pk(sym_key, len(sym_key), pem_key, pem_key_size)
 
     # Sign the encrypted symmetric key
@@ -2730,7 +2730,7 @@ def _get_enclave_symm_key():
     if "current_user" in _CONF:
         username = _CONF["current_user"]
     else:
-        raise ValueError("Please set your username with the init_user() function")
+        raise ValueError("Please set your username with the init_client() function")
     channel_addr = _CONF["remote_addr"]
     if channel_addr:
         with grpc.insecure_channel(channel_addr) as channel:
