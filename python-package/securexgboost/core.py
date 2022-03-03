@@ -2975,6 +2975,7 @@ class RemoteAPI:
     def XGBoosterSaveModel(request, signers, signatures, sig_lengths):
         booster_handle = request.params.booster_handle
         filename = request.params.filename
+        sym_key = request.params.sym_key
         nonce = proto_to_pointer(request.seq_num.nonce)
         nonce_size = request.seq_num.nonce_size
         nonce_ctr = request.seq_num.nonce_ctr
@@ -2992,12 +2993,14 @@ class RemoteAPI:
             ctypes.byref(out_sig_len),
             from_pystr_to_cstr(signers),
             c_signatures,
-            c_sig_lengths))
+            c_sig_lengths,
+            sym_key))
         return out_sig, out_sig_len.value
 
     def XGBoosterLoadModel(request, signers, signatures, sig_lengths):
         booster_handle = request.params.booster_handle
         filename = request.params.filename
+        sym_key = request.params.sym_key
         username = request.username
         nonce = proto_to_pointer(request.seq_num.nonce)
         nonce_size = request.seq_num.nonce_size
@@ -3016,7 +3019,8 @@ class RemoteAPI:
             ctypes.byref(out_sig_len),
             from_pystr_to_cstr(signers),
             c_signatures,
-            c_sig_lengths))
+            c_sig_lengths,
+            sym_key))
         return out_sig, out_sig_len.value
 
     # TODO test this
