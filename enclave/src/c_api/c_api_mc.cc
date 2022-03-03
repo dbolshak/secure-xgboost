@@ -720,7 +720,7 @@ XGB_DLL int XGBoosterPredict(BoosterHandle handle,
 }
 
 // TODO(rishabh): Server can replace file contents
-XGB_DLL int XGBoosterLoadModel(BoosterHandle handle, const char* fname, uint8_t* nonce, size_t nonce_size, uint32_t nonce_ctr, uint8_t** out_sig, size_t* out_sig_length, char** signers, uint8_t** signatures, size_t* sig_lengths) {
+XGB_DLL int XGBoosterLoadModel(BoosterHandle handle, const char* fname, uint8_t* nonce, size_t nonce_size, uint32_t nonce_ctr, uint8_t** out_sig, size_t* out_sig_length, char** signers, uint8_t** signatures, size_t* sig_lengths, const char* sym_key) {
     API_BEGIN();
     CHECK_HANDLE();
 
@@ -749,7 +749,7 @@ XGB_DLL int XGBoosterLoadModel(BoosterHandle handle, const char* fname, uint8_t*
       unsigned char* tag = iv + CIPHER_IV_SIZE;
       unsigned char* data = tag + CIPHER_TAG_SIZE;
       unsigned char* output = (unsigned char*) malloc (buf_len);
-      unsigned char* key = EnclaveContext::getInstance().get_symm_key();
+      unsigned char* key = (unsigned char*)sym_key;
 
       decrypt_symm(
           key,
@@ -775,7 +775,7 @@ XGB_DLL int XGBoosterLoadModel(BoosterHandle handle, const char* fname, uint8_t*
     API_END();
 }
 
-XGB_DLL int XGBoosterSaveModel(BoosterHandle handle, const char* fname, uint8_t* nonce, size_t nonce_size, uint32_t nonce_ctr, uint8_t** out_sig, size_t* out_sig_length, char **signers, uint8_t** signatures, size_t* sig_lengths) {
+XGB_DLL int XGBoosterSaveModel(BoosterHandle handle, const char* fname, uint8_t* nonce, size_t nonce_size, uint32_t nonce_ctr, uint8_t** out_sig, size_t* out_sig_length, char **signers, uint8_t** signatures, size_t* sig_lengths, const char* sym_key) {
     API_BEGIN();
     CHECK_HANDLE();
 
@@ -801,7 +801,7 @@ XGB_DLL int XGBoosterSaveModel(BoosterHandle handle, const char* fname, uint8_t*
       unsigned char* iv = buf;
       unsigned char* tag = buf + CIPHER_IV_SIZE;
       unsigned char* output = tag + CIPHER_TAG_SIZE;
-      unsigned char* key = EnclaveContext::getInstance().get_symm_key();
+      unsigned char* key = (unsigned char*)sym_key;
 
       encrypt_symm(
           key,

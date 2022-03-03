@@ -738,6 +738,7 @@ XGB_DLL int XGBoosterPredict(BoosterHandle handle,
  * \param signers list of usernames of signing clients
  * \param signatures list of client signatures
  * \param sig_lengths list of signature lengths
+ * \param sym_key symmetric key which has been used to save_model
  * \return 0 when success, -1 when failure happens
  */
 XGB_DLL int XGBoosterLoadModel(BoosterHandle handle,
@@ -749,7 +750,8 @@ XGB_DLL int XGBoosterLoadModel(BoosterHandle handle,
                                size_t *out_sig_length,
                                char **signers,
                                uint8_t* signatures[],
-                               size_t* sig_lengths);
+                               size_t* sig_lengths,
+                               const char* sym_key);
 
 /*!
  * \brief save model into existing file
@@ -763,6 +765,7 @@ XGB_DLL int XGBoosterLoadModel(BoosterHandle handle,
  * \param signers list of usernames of signing clients
  * \param signatures list of client signatures
  * \param sig_lengths list of signature lengths
+ * \param sym_key symmetric key which is used to save_model
  * \return 0 when success, -1 when failure happens
  */
 XGB_DLL int XGBoosterSaveModel(BoosterHandle handle,
@@ -774,7 +777,8 @@ XGB_DLL int XGBoosterSaveModel(BoosterHandle handle,
                                size_t *out_sig_length,
                                char** signers,
                                uint8_t* signatures[],
-                               size_t* sig_lengths);
+                               size_t* sig_lengths,
+                               const char* sym_key);
 
 /*!
  * \brief load model from in memory buffer
