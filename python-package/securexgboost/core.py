@@ -1391,7 +1391,7 @@ class Booster(object):
         if "current_user" in _CONF:
             user = _CONF["current_user"]
         else:
-            raise ValueError("Please set your user with init_user() function")
+            raise ValueError("Please set your user with init_client() function")
 
         for key, val in params:
             args = "XGBoosterSetParam " + self.handle.value.decode('utf-8') + " " + key + "," + str(val)
@@ -1654,7 +1654,7 @@ class Booster(object):
         if "current_user" in _CONF:
             username = _CONF["current_user"]
         else:
-            raise ValueError("Please set your username with the init_user() function")
+            raise ValueError("Please set your username with the init_client() function")
         option_mask = 0x00
         if output_margin:
             option_mask |= 0x01
@@ -1793,13 +1793,8 @@ class Booster(object):
         preds : numpy array 
             plaintext predictions
         """
-        try:
-            sym_key = _CONF["current_user_sym_key"]
-        except:
-            raise ValueError("User not found. Please set your username, symmetric key, and public key using `init_user()`")
 
-        # Cast arguments to proper ctypes
-        c_char_p_key = ctypes.c_char_p(sym_key)
+        c_char_p_key = _get_current_user_sym_key()
 
         if not isinstance(encrypted_preds, list):
             size_t_num_preds = ctypes.c_size_t(num_preds)
@@ -1845,7 +1840,7 @@ class Booster(object):
         if "current_user" in _CONF:
             username = _CONF["current_user"]
         else:
-            raise ValueError("Please set your username with the init_user() function")
+            raise ValueError("Please set your username with the init_client() function")
         if isinstance(fname, STRING_TYPES):  # assume file name
 
             # Normalize file paths (otherwise signatures might differ)
@@ -1856,6 +1851,7 @@ class Booster(object):
 
             out_sig = ctypes.POINTER(ctypes.c_uint8)()
             out_sig_length = c_bst_ulong()
+            c_char_p_key = _get_current_user_sym_key()
 
             channel_addr = _CONF["remote_addr"]
             if channel_addr:
@@ -1863,7 +1859,8 @@ class Booster(object):
                     stub = remote_pb2_grpc.RemoteStub(channel)
                     save_model_params = remote_pb2.SaveModelParams(
                         booster_handle=self.handle.value,
-                        filename=fname)
+                        filename=fname,
+                        sym_key=c_char_p_key.value)
                     seq_num = get_seq_num_proto() 
                     response = _check_remote_call(stub.rpc_XGBoosterSaveModel(remote_pb2.SaveModelParamsRequest(params=save_model_params, seq_num=seq_num, username=_CONF["current_user"],
                                                                                                                 signature=sig, sig_len=sig_len)))
@@ -1879,7 +1876,7 @@ class Booster(object):
                                                     nonce, nonce_size, ctypes.c_uint32(nonce_ctr),
                                                     ctypes.byref(out_sig),
                                                     ctypes.byref(out_sig_length),
-                                                    signers, c_signatures, c_sig_lengths))
+                                                    signers, c_signatures, c_sig_lengths, c_char_p_key))
             verify_enclave_signature("", 0, out_sig, out_sig_length)
         else:
             raise TypeError("fname must be a string")
@@ -1899,7 +1896,7 @@ class Booster(object):
         if "current_user" in _CONF:
             username = _CONF["current_user"]
         else:
-            raise ValueError("Please set your username with the init_user() function")
+            raise ValueError("Please set your username with the init_client() function")
         length = c_bst_ulong()
         cptr = ctypes.POINTER(ctypes.c_char)()
 
@@ -1957,7 +1954,7 @@ class Booster(object):
         if "current_user" in _CONF:
             username = _CONF["current_user"]
         else:
-            raise ValueError("Please set your username with the init_user() function")
+            raise ValueError("Please set your username with the init_client() function")
         if isinstance(fname, STRING_TYPES):
 
             # Normalize file paths (otherwise signatures might differ)
@@ -1971,12 +1968,14 @@ class Booster(object):
             out_sig_length = c_bst_ulong()
 
             channel_addr = _CONF["remote_addr"]
+            c_char_p_key = _get_current_user_sym_key()
             if channel_addr:
                 with grpc.insecure_channel(channel_addr) as channel:
                     stub = remote_pb2_grpc.RemoteStub(channel)
                     load_model_params = remote_pb2.LoadModelParams(
                         booster_handle=self.handle.value,
-                        filename=fname)
+                        filename=fname,
+                        sym_key=c_char_p_key.value)
                     seq_num = get_seq_num_proto() 
                     response = _check_remote_call(stub.rpc_XGBoosterLoadModel(remote_pb2.LoadModelParamsRequest(params=load_model_params,
                                                                                                                 seq_num=seq_num,
@@ -1991,7 +1990,7 @@ class Booster(object):
                 nonce = _CONF["nonce"]
                 nonce_size = _CONF["nonce_size"]
                 nonce_ctr = ctypes.c_uint32(_CONF["nonce_ctr"])
-                _check_call(_LIB.XGBoosterLoadModel(self.handle, c_str(fname), nonce, nonce_size, nonce_ctr, ctypes.byref(out_sig), ctypes.byref(out_sig_length), signers, c_signatures, c_lengths))
+                _check_call(_LIB.XGBoosterLoadModel(self.handle, c_str(fname), nonce, nonce_size, nonce_ctr, ctypes.byref(out_sig), ctypes.byref(out_sig_length), signers, c_signatures, c_lengths, c_char_p_key))
 
             verify_enclave_signature("", 0, out_sig, out_sig_length)
         else:
@@ -2193,7 +2192,7 @@ class Booster(object):
         try:
             sym_key = _CONF["enclave_sym_key"]
         except:
-            raise ValueError("Please set your username with the init_user() function")
+            raise ValueError("Please set your username with the init_client() function")
         _check_call(_LIB.decrypt_dump(sym_key, sarr, length))
 
 
@@ -2699,7 +2698,7 @@ def _add_client_key():
         priv_key = _CONF["current_user_priv_key"]
         cert = _CONF["current_user_cert"]
     except:
-        raise ValueError("Please set your username with the init_user() function")
+        raise ValueError("Please set your username with the init_client() function")
     enc_sym_key, enc_sym_key_size = encrypt_data_with_pk(sym_key, len(sym_key), pem_key, pem_key_size)
 
     # Sign the encrypted symmetric key
@@ -2735,7 +2734,7 @@ def _get_enclave_symm_key():
     if "current_user" in _CONF:
         username = _CONF["current_user"]
     else:
-        raise ValueError("Please set your username with the init_user() function")
+        raise ValueError("Please set your username with the init_client() function")
     channel_addr = _CONF["remote_addr"]
     if channel_addr:
         with grpc.insecure_channel(channel_addr) as channel:
@@ -2756,15 +2755,23 @@ def _get_enclave_symm_key():
 
 
     # Decrypt the key and save it
-    try:
-        sym_key = _CONF["current_user_sym_key"]
-    except:
-        raise ValueError("User not found. Please set your username, symmetric key, and public key using `init_user()`")
-    c_char_p_key = ctypes.c_char_p(sym_key)
+    c_char_p_key = _get_current_user_sym_key()
     enclave_symm_key = ctypes.POINTER(ctypes.c_uint8)()
 
     _check_call(_LIB.decrypt_enclave_key(c_char_p_key, enc_key, enc_key_size, ctypes.byref(enclave_symm_key)))
     _CONF["enclave_sym_key"] = enclave_symm_key
+
+
+def _get_current_user_sym_key():
+    """
+    Get user's symmetric key in C style used to encrypt/decrypt data specific to current user
+    """
+
+    try:
+        sym_key = _CONF["current_user_sym_key"]
+        return ctypes.c_char_p(sym_key)
+    except:
+        raise ValueError("User not found. Please set your username, symmetric key, and public key using `init_client()`")
 
 
 ##########################################
@@ -2968,6 +2975,7 @@ class RemoteAPI:
     def XGBoosterSaveModel(request, signers, signatures, sig_lengths):
         booster_handle = request.params.booster_handle
         filename = request.params.filename
+        sym_key = request.params.sym_key
         nonce = proto_to_pointer(request.seq_num.nonce)
         nonce_size = request.seq_num.nonce_size
         nonce_ctr = request.seq_num.nonce_ctr
@@ -2985,12 +2993,14 @@ class RemoteAPI:
             ctypes.byref(out_sig_len),
             from_pystr_to_cstr(signers),
             c_signatures,
-            c_sig_lengths))
+            c_sig_lengths,
+            sym_key))
         return out_sig, out_sig_len.value
 
     def XGBoosterLoadModel(request, signers, signatures, sig_lengths):
         booster_handle = request.params.booster_handle
         filename = request.params.filename
+        sym_key = request.params.sym_key
         username = request.username
         nonce = proto_to_pointer(request.seq_num.nonce)
         nonce_size = request.seq_num.nonce_size
@@ -3009,7 +3019,8 @@ class RemoteAPI:
             ctypes.byref(out_sig_len),
             from_pystr_to_cstr(signers),
             c_signatures,
-            c_sig_lengths))
+            c_sig_lengths,
+            sym_key))
         return out_sig, out_sig_len.value
 
     # TODO test this

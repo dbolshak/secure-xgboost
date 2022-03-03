@@ -193,7 +193,8 @@ enclave {
                 [in, count=num_sigs] size_t* signer_lengths,
                 [in, count=num_sigs] uint8_t **signatures,
                 [in, count=num_sigs] size_t* sig_lengths,
-                size_t num_sigs);
+                size_t num_sigs,
+                [in, string] const char* sym_key);
 
         public int enclave_XGBoosterSaveModel(
                 [in, string] char* handle,
@@ -207,7 +208,8 @@ enclave {
                 [in, count=num_sigs] size_t* signer_lengths,
                 [in, count=num_sigs] uint8_t **signatures,
                 [in, count=num_sigs] size_t* sig_lengths,
-                size_t num_sigs);
+                size_t num_sigs,
+                [in, string] const char* sym_key);
 
         public int enclave_XGBoosterDumpModel(
                 [in, string] char* handle,
